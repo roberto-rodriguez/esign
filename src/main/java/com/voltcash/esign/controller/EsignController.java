@@ -35,7 +35,7 @@ public class EsignController {
     }
 
     @PostMapping("/{sessionId}/viewed/{documentType}")
-    public ResponseEntity<Void> markViewed(@PathVariable String sessionId, @PathVariable String documentType) {
+    public ResponseEntity<Void> markViewed(@PathVariable("sessionId") String sessionId, @PathVariable("documentType") String documentType) {
         esignService.markViewed(sessionId, documentType);
         return ResponseEntity.noContent().build();
     }
@@ -46,7 +46,7 @@ public class EsignController {
     }
 
     @GetMapping("/documents/{filename:.+}")
-    public ResponseEntity<Resource> getDocument(@PathVariable String filename) {
+    public ResponseEntity<Resource> getDocument(@PathVariable("filename") String filename) {
         Resource resource = new ClassPathResource("pdfs/" + filename);
         if (!resource.exists()) {
             return ResponseEntity.notFound().build();
