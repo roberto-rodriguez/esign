@@ -1,0 +1,49 @@
+:root {
+    --green-900: #0f3d2e;
+    --green-700: #1f6f54;
+    --green-500: #2aa876;
+    --green-100: #e8f5ee;
+    --text: #133126;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(180deg, var(--green-100), #f5fbf8);
+    color: var(--text);
+}
+
+.container { max-width: 980px; margin: 0 auto; padding: 20px; }
+header { display: flex; justify-content: space-between; align-items: center; }
+
+.lang-switch button {
+    border: 1px solid var(--green-700);
+    background: white;
+    color: var(--green-700);
+    padding: 6px 12px;
+    cursor: pointer;
+}
+.lang-switch .active { background: var(--green-700); color: white; }
+
+.card {
+    background: white;
+    border: 1px solid #d1eadb;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 6px 16px rgba(23, 81, 57, .08);
+}
+
+.doc-actions { display: flex; gap: 10px; margin-bottom: 12px; }
+.btn {
+    background: var(--green-700);
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+}
+.btn:disabled { background: #9dc8b5; cursor: not-allowed; }
+.viewer-wrap { border: 1px solid #b9deca; border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+#pdf-viewer { width: 100%; min-height: 360px; border: none; }
+.checks { display: grid; gap: 10px; margin-bottom: 12px; }
+.submit { background: var(--green-900); }
+#message { font-weight: bold; color: var(--green-900); }
