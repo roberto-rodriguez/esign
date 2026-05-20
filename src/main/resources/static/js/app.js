@@ -21,7 +21,6 @@ const text = {
 
 function renderText() {
   const t = text[state.lang];
-  document.getElementById('title').textContent = t.title;
   document.getElementById('welcome').textContent = t.welcome;
   document.getElementById('instructions').textContent = t.instructions;
   document.getElementById('text-esign').textContent = t.esign;
@@ -56,7 +55,7 @@ async function initSession() {
 function bindEvents() {
   document.getElementById('open-esign').onclick = () => openEsign();
   document.getElementById('open-others').onclick = () => openOthers();
-  document.getElementById('check-esign').onchange = updateSubmit;
+  document.getElementById('check-esign').onchange = onEsignCheckChanged;
   document.getElementById('check-others').onchange = updateSubmit;
   document.getElementById('submit').onclick = submitSignature;
 }
@@ -76,7 +75,6 @@ async function openEsign() {
   showDocuments([state.docs.esign]);
   state.viewed.esign = true;
   await fetch(`/api/esign/${state.sessionId}/viewed/esign`, { method: 'POST' });
-  document.getElementById('open-others').disabled = false;
   document.getElementById('check-esign').disabled = false;
 }
 
@@ -86,6 +84,18 @@ async function openOthers() {
   state.viewed.others = true;
   await fetch(`/api/esign/${state.sessionId}/viewed/others`, { method: 'POST' });
   document.getElementById('check-others').disabled = false;
+}
+
+
+function onEsignCheckChanged() {
+  const esignChecked = document.getElementById('check-esign').checked;
+  document.getElementById('open-others').disabled = !esignChecked;
+  if (!esignChecked) {
+    document.getElementById('check-others').checked = false;
+    document.getElementById('check-others').disabled = true;
+    state.viewed.others = false;
+  }
+  updateSubmit();
 }
 
 function updateSubmit() {
