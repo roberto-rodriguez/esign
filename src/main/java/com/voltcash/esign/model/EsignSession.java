@@ -8,6 +8,7 @@ public record EsignSession(
         String ipAddress,
         String phoneNumber,
         String callbackUrl,
+        String language,
         Instant createdAt,
         Instant signedAt,
         boolean esignViewed,

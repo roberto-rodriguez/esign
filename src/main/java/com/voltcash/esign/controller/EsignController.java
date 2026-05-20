@@ -29,9 +29,9 @@ public class EsignController {
         return Map.of("sessionId", sessionId);
     }
 
-    @GetMapping("/config")
-    public Map<String, Object> config() {
-        return esignService.getUiConfig();
+    @GetMapping("/{sessionId}/config")
+    public Map<String, Object> config(@PathVariable("sessionId") String sessionId) {
+        return esignService.getUiConfig(sessionId);
     }
 
     @PostMapping("/{sessionId}/viewed/{documentType}")
@@ -45,12 +45,11 @@ public class EsignController {
         return esignService.submit(request.sessionId(), request.esignAccepted(), request.otherAgreementsAccepted());
     }
 
-    @GetMapping("/documents/{filename:.+}")
-    public ResponseEntity<Resource> getDocument(@PathVariable("filename") String filename) {
-        Resource resource = new ClassPathResource("pdfs/" + filename);
-        if (!resource.exists()) {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/documents/{lang}/{filename:.+}")
+    public ResponseEntity<Resource> getDocument(@PathVariable("lang") String lang, @PathVariable("filename") String filename) {
+        String normalizedLang = "es".equalsIgnoreCase(lang) ? "es" : "en";
+        Resource resource = new ClassPathResource("pdfs/" + normalizedLang + "/" + filename);
+        if (!resource.exists()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")

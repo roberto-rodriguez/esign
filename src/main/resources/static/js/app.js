@@ -1,10 +1,10 @@
-const state = { sessionId: null, lang: 'en', viewed: { esign: false, others: false } };
+const state = { sessionId: null, lang: 'en', docs: { esign: null, others: [] }, viewed: { esign: false, others: false } };
 
 const text = {
   en: {
     title: 'E-Sign Consent',
     welcome: 'Please review and accept the agreements',
-    instructions: 'You must open E-Sign first, then open the other agreements. Checkboxes are enabled after viewing.',
+    instructions: 'You must open E-Sign first, then open the other agreements.',
     esign: 'By checking this box, I confirm that I have read and agree to the Electronic Communications “ESIGN” Agreement.',
     others: 'By checking this box, I confirm that I have read and agree to the Cardholder Agreement, Fee Schedule and Privacy Policy.',
     submitOk: 'Signature completed successfully.'
@@ -12,7 +12,7 @@ const text = {
   es: {
     title: 'Consentimiento de Firma Electrónica',
     welcome: 'Revise y acepte los acuerdos',
-    instructions: 'Debe abrir primero E-Sign y luego los otros acuerdos. Las casillas se habilitan después de revisar.',
+    instructions: 'Debe abrir primero E-Sign y luego los otros acuerdos.',
     esign: 'Al marcar esta casilla, confirmo que he leído y acepto el Acuerdo de Comunicaciones Electrónicas “ESIGN”.',
     others: 'Al marcar esta casilla, confirmo que he leído y acepto el Acuerdo del Tarjetahabiente, Tabla de Cargos y Política de Privacidad.',
     submitOk: 'Firma completada correctamente.'
@@ -29,55 +29,71 @@ function renderText() {
 }
 
 async function initSession() {
-  const params = new URLSearchParams(window.location.search);
+  const p = new URLSearchParams(location.search);
+  state.lang = (p.get('lang') || 'en').toLowerCase() === 'es' ? 'es' : 'en';
+
   const payload = {
-    fullName: params.get('fullName') || 'Mock User',
-    ipAddress: params.get('ipAddress') || '',
-    phoneNumber: params.get('phoneNumber') || '0000000000',
-    callbackUrl: params.get('callbackUrl') || 'http://localhost:8080/mock-callback'
+    fullName: p.get('fullName') || 'Mock User',
+    ipAddress: p.get('ipAddress') || '',
+    phoneNumber: p.get('phoneNumber') || '0000000000',
+    callbackUrl: p.get('callbackUrl') || 'http://localhost:8080/mock-callback',
+    defaultLanguage: state.lang
   };
 
-  const res = await fetch('/api/esign/init', {
+  const initRes = await fetch('/api/esign/init', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
   });
-  const body = await res.json();
-  state.sessionId = body.sessionId;
+  const initBody = await initRes.json();
+  state.sessionId = initBody.sessionId;
+
+  const cfgRes = await fetch(`/api/esign/${state.sessionId}/config`);
+  const cfg = await cfgRes.json();
+  state.lang = cfg.language;
+  state.docs.esign = cfg.esignDocumentUrl;
+  state.docs.others = cfg.otherDocumentUrls || [];
 }
 
 function bindEvents() {
-  document.getElementById('lang-en').onclick = () => { state.lang = 'en'; toggleLang(); };
-  document.getElementById('lang-es').onclick = () => { state.lang = 'es'; toggleLang(); };
-
-  document.getElementById('open-esign').onclick = () => openDoc('esign', '/api/esign/documents/esign-requirements.pdf');
-  document.getElementById('open-others').onclick = () => openDoc('others', '/api/esign/documents/other-agreements.pdf');
-
+  document.getElementById('open-esign').onclick = () => openEsign();
+  document.getElementById('open-others').onclick = () => openOthers();
   document.getElementById('check-esign').onchange = updateSubmit;
   document.getElementById('check-others').onchange = updateSubmit;
-
-  document.getElementById('submit').onclick = submit;
+  document.getElementById('submit').onclick = submitSignature;
 }
 
-function toggleLang() {
-  document.getElementById('lang-en').classList.toggle('active', state.lang === 'en');
-  document.getElementById('lang-es').classList.toggle('active', state.lang === 'es');
-  renderText();
+function showDocuments(urls) {
+  const viewer = document.getElementById('pdf-viewer');
+  viewer.innerHTML = '';
+  urls.forEach(url => {
+    const frame = document.createElement('iframe');
+    frame.src = url;
+    frame.title = 'PDF viewer';
+    viewer.appendChild(frame);
+  });
 }
 
-async function openDoc(type, url) {
-  if (type === 'others' && !state.viewed.esign) return;
-  document.getElementById('pdf-viewer').src = url;
-  state.viewed[type] = true;
-  await fetch(`/api/esign/${state.sessionId}/viewed/${type}`, { method: 'POST' });
-  if (state.viewed.esign) document.getElementById('check-esign').disabled = false;
-  if (state.viewed.esign && state.viewed.others) document.getElementById('check-others').disabled = false;
+async function openEsign() {
+  showDocuments([state.docs.esign]);
+  state.viewed.esign = true;
+  await fetch(`/api/esign/${state.sessionId}/viewed/esign`, { method: 'POST' });
+  document.getElementById('open-others').disabled = false;
+  document.getElementById('check-esign').disabled = false;
+}
+
+async function openOthers() {
+  if (!state.viewed.esign) return;
+  showDocuments(state.docs.others);
+  state.viewed.others = true;
+  await fetch(`/api/esign/${state.sessionId}/viewed/others`, { method: 'POST' });
+  document.getElementById('check-others').disabled = false;
 }
 
 function updateSubmit() {
-  const can = document.getElementById('check-esign').checked && document.getElementById('check-others').checked;
-  document.getElementById('submit').disabled = !can;
+  const canSubmit = document.getElementById('check-esign').checked && document.getElementById('check-others').checked;
+  document.getElementById('submit').disabled = !canSubmit;
 }
 
-async function submit() {
+async function submitSignature() {
   const payload = {
     sessionId: state.sessionId,
     esignAccepted: document.getElementById('check-esign').checked,
@@ -90,7 +106,7 @@ async function submit() {
 }
 
 (async function bootstrap() {
-  renderText();
   bindEvents();
   await initSession();
+  renderText();
 })();

@@ -10,7 +10,7 @@
 <div class="container">
     <header>
         <h1 id="title">E-Sign Consent</h1>
-        <div class="lang-switch" role="group" aria-label="Language switch">
+        <div class="lang-switch hidden" role="group" aria-label="Language switch">
             <button id="lang-en" class="active">EN</button>
             <button id="lang-es">ES</button>
         </div>
@@ -22,12 +22,10 @@
 
         <div class="doc-actions">
             <button id="open-esign" class="btn">Open E-Sign Agreement</button>
-            <button id="open-others" class="btn">Open Other Agreements</button>
+            <button id="open-others" class="btn" disabled>Open Other Agreements</button>
         </div>
 
-        <div class="viewer-wrap">
-            <iframe id="pdf-viewer" title="PDF viewer"></iframe>
-        </div>
+        <div id="pdf-viewer" class="viewer-wrap"></div>
 
         <div class="checks">
             <label><input type="checkbox" id="check-esign" disabled/> <span id="text-esign"></span></label>

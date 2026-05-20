@@ -6,6 +6,7 @@ public record EsignInitRequest(
         @NotBlank String fullName,
         String ipAddress,
         @NotBlank String phoneNumber,
-        @NotBlank String callbackUrl
+        @NotBlank String callbackUrl,
+        String defaultLanguage
 ) {
 }
